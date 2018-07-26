@@ -1,4 +1,4 @@
-var getExpression = require('./index').getExpression;
+var getExpression = require('./index').getExpression
 
 var testCases = [
   {
@@ -65,19 +65,33 @@ var testCases = [
     input: 1000,
     output: '+[[+!+[]]+[+[]]+[+[]]+[+[]]]'
   }
-];
+]
 describe('Testcase validation', function() {
   testCases.forEach(function(testCase) {
     test('test case validator ' + testCase.input, function() {
-      expect(testCase.input).toBe(eval(testCase.output));
-    });
-  });
-});
+      expect(testCase.input).toBe(eval(testCase.output))
+    })
+  })
+})
 describe('Function validation', function() {
   testCases.forEach(function(testCase) {
-    test('number ' + testCase.input, function() {
-      expect(getExpression(testCase.input)).toBe(testCase.output);
-    });
-  });
-});
-
+    const result = getExpression(testCase.input)
+    test(
+      'result of ' +
+        testCase.input +
+        ' should produce less than or equal length than expected output ',
+      function() {
+        // console.log('input', testCase.input, ' output', result)
+        expect(result.length).toBeLessThanOrEqual(testCase.output.length)
+      }
+    )
+    test(
+      'result of ' +
+        testCase.input +
+        ' should be correctly evaluated to have same value and type as input',
+      function() {
+        expect(eval(result)).toBe(testCase.input)
+      }
+    )
+  })
+})
