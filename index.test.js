@@ -73,7 +73,7 @@ describe('Testcase validation', function() {
     })
   })
 })
-describe('Function validation', function() {
+describe.skip('Function validation', function() {
   testCases.forEach(function(testCase) {
     const result = getExpression(testCase.input)
     test(
@@ -81,7 +81,7 @@ describe('Function validation', function() {
         testCase.input +
         ' should produce less than or equal length than expected output ',
       function() {
-        // console.log('input', testCase.input, ' output', result)
+        console.log('input', testCase.input, ' output', result)
         expect(result.length).toBeLessThanOrEqual(testCase.output.length)
       }
     )
@@ -94,4 +94,29 @@ describe('Function validation', function() {
       }
     )
   })
+})
+
+describe('All number validation', function() {
+  for (let i = 0; i <= 1000; i++) {
+    const result = getExpression(i)
+    test(
+      'result of ' +
+        i +
+        ' should produce less than or equal length than expected output ',
+      function() {
+        console.log('input', i, ' output', result)
+        expect(result.length).toBeLessThanOrEqual(75)
+      }
+    )
+
+    test(
+      'result of ' +
+        i +
+        ' should be correctly evaluated to have same value and type as input',
+      function() {
+        console.log('input', i, ' output', result, 'eval as', eval(result))
+        expect(eval(result)).toBe(i)
+      }
+    )
+  }
 })
