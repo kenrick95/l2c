@@ -17,20 +17,18 @@ function tryCounting() {
     mappings.set(i, new Array(i).fill('+!![]').join(''))
   }
 }
-tryCounting()
 
 function tryDigitizing() {
   for (let i = 10; i <= MAX_NUMBER; i++) {
-    const resultDigits = getDigitExpression(i)
+    const resultDigits = getSingleDigitExpression(i)
     const previousResult = mappings.get(i)
     if (resultDigits.length < previousResult.length) {
       mappings.set(i, resultDigits)
     }
   }
 }
-tryDigitizing()
 
-function getDigitExpression(number) {
+function getSingleDigitExpression(number) {
   const digits = String(number)
     .split('')
     .map(x => parseInt(x, 10))
@@ -43,6 +41,69 @@ function getDigitExpression(number) {
     resultDigits = '+[' + resultDigits + ']'
   }
   return resultDigits
+}
+
+function tryGroupedDigitizing(skip = 0) {
+  for (let i = 100; i <= MAX_NUMBER; i++) {
+    const resultDigits = getGroupedDigitExpression(i, 2, skip)
+    const previousResult = mappings.get(i)
+    if (resultDigits.length < previousResult.length) {
+      mappings.set(i, resultDigits)
+    }
+  }
+}
+
+// Group every "groupSize" digits
+function getGroupedDigitExpression(number, groupSize, skip = 0) {
+  const digits = String(number)
+    .split('')
+    .map(x => parseInt(x, 10))
+
+  const groupedDigits = []
+  for (let i = 0; i < skip; i++) {
+    groupedDigits.push(digits[i])
+  }
+  for (let i = skip; i < digits.length; i++) {
+    let temp = 0
+    for (let j = 0; j < groupSize; j++) {
+      temp = temp * 10 + digits[i]
+    }
+    groupedDigits.push(temp)
+  }
+
+  let resultDigits = groupedDigits
+    .map(digit => {
+      return '[' + mappings.get(digit) + ']'
+    })
+    .join('+')
+  if (typeof eval(resultDigits) !== 'number') {
+    resultDigits = '+[' + resultDigits + ']'
+  }
+  return resultDigits
+}
+
+function runPass(count) {
+  if (count === 1) {
+    tryCounting()
+  }
+  tryDigitizing()
+  tryGroupedDigitizing(0)
+  tryGroupedDigitizing(1)
+  tryEverythingElse()
+}
+runPass(1) // 141 tc failed
+runPass(2) // 56 tc failed
+runPass(3) // 55 tc failed
+
+// TODO: Worst length is now 85, output need to be optimized (e.g. stripping '+', etc)
+
+function tryEverythingElse() {
+  vis.clear()
+  vis.set(0, true)
+  vis.set(1, true)
+  for (let i = 0; i < MAX_NUMBER; i++) {
+    getExpression(i)
+  }
 }
 
 function getExpression(number) {

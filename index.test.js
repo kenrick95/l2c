@@ -104,7 +104,15 @@ describe('All number validation', function() {
         i +
         ' should produce less than or equal length than expected output ',
       function() {
-        console.log('input', i, ' output', result)
+        if (result.length > 75)
+          console.log(
+            'input',
+            i,
+            ' output',
+            result,
+            result.length,
+            result.length <= 75 ? 'ok' : 'nope'
+          )
         expect(result.length).toBeLessThanOrEqual(75)
       }
     )
@@ -114,7 +122,7 @@ describe('All number validation', function() {
         i +
         ' should be correctly evaluated to have same value and type as input',
       function() {
-        console.log('input', i, ' output', result, 'eval as', eval(result))
+        // console.log('input', i, ' output', result, 'eval as', eval(result))
         expect(eval(result)).toBe(i)
       }
     )
