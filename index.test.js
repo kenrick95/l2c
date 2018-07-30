@@ -1,96 +1,36 @@
-var getExpression = require('./index').getExpression
+const { getExpression, getOptimizedExpression } = require('./index')
 
-var testCases = [
+const testCases = [
   {
-    input: 0,
+    input: '+![]',
     output: '+![]'
   },
   {
-    input: 1,
+    input: '+!![]',
     output: '+!![]'
   },
   {
-    input: 2,
-    output: '+!![]+!![]'
-  },
-  {
-    input: 3,
-    output: '+!![]+!![]+!![]'
-  },
-  {
-    input: 4,
-    output: '+!![]+!![]+!![]+!![]'
-  },
-  {
-    input: 5,
-    output: '+!![]+!![]+!![]+!![]+!![]'
-  },
-  {
-    input: 6,
+    input: '[+!![]+!![]+!![]]*[+!![]+!![]]', // 6 = 3 * 2
     output: '[!![]+!![]+!![]]*[!![]+!![]]'
   },
   {
-    input: 7,
-    output: '+[[+!+[]]+[+[]]]-!![]-!![]-!![]'
+    input: '+[[+!![]]+[+[]]]-[+!![]+!![]+!![]]', // 7 = "10" - 3
+    output: '+[[+!![]]+[+[]]]-!![]-!![]-!![]'
   },
   {
-    input: 8,
-    output: '+[[+!+[]]+[+[]]]-!![]-!![]'
-  },
-  {
-    input: 9,
-    output: '+[[+!+[]]+[+[]]]-!![]'
-  },
-  {
-    input: 10,
-    output: '+[[+!+[]]+[+[]]]'
-  },
-  {
-    input: 100,
-    output: '+[[+!+[]]+[+[]]+[+[]]]'
-  },
-  {
-    input: 900,
-    output: '[[+!+[]]+[+[]]+[+[]]+[+[]]]-[[+!+[]]+[+[]]+[+[]]]'
-  },
-  {
-    input: 990,
-    output: '[[+!+[]]+[+[]]+[+[]]+[+[]]]-[[+!+[]]+[+[]]]'
-  },
-  {
-    input: 999,
-    output: '[[+!+[]]+[+[]]+[+[]]+[+[]]]-!![]'
-  },
-  {
-    input: 1000,
-    output: '+[[+!+[]]+[+[]]+[+[]]+[+[]]]'
+    input: '[+!![]+!![]]*[+[[+!![]+!![]+!![]]+[+[]]]-[+!![]+!![]]]', // 56 = 2 * ("30" - 2)
+    output: '[!![]+!![]]*[[!![]+!![]+!![]]+[+[]]-!![]-!![]]'
   }
 ]
-describe('Testcase validation', function() {
+
+describe('Optimizer', function() {
   testCases.forEach(function(testCase) {
-    test('test case validator ' + testCase.input, function() {
-      expect(testCase.input).toBe(eval(testCase.output))
-    })
-  })
-})
-describe.skip('Function validation', function() {
-  testCases.forEach(function(testCase) {
-    const result = getExpression(testCase.input)
+    const result = getOptimizedExpression(testCase.input)
     test(
-      'result of ' +
-        testCase.input +
-        ' should produce less than or equal length than expected output ',
+      'Result of optimizing ' + testCase.input + ' well-optimized',
       function() {
         console.log('input', testCase.input, ' output', result)
-        expect(result.length).toBeLessThanOrEqual(testCase.output.length)
-      }
-    )
-    test(
-      'result of ' +
-        testCase.input +
-        ' should be correctly evaluated to have same value and type as input',
-      function() {
-        expect(eval(result)).toBe(testCase.input)
+        expect(result).toBe(testCase.output)
       }
     )
   })

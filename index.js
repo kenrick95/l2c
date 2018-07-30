@@ -166,6 +166,27 @@ function getExpression(number) {
     return finalCandidate
   }
 }
+
+/**
+ * Get a more optimized version of a expression
+ * @param {string} expression
+ */
+function getOptimizedExpression(expression) {
+  let tempExpression = expression
+  // Remove '+' after a start of bracket
+  // const removePlusAfterArray = /\[\+!!/g
+  // while (removePlusAfterArray.test(tempExpression)) {
+  //   tempExpression = tempExpression.replace(removePlusAfterArray, '[!!')
+  // }
+  // NOTE: Need to "parse" instead of just regexing, because
+  // +[[+!![]]+[+[]]]-[+!![]+!![]+!![]] --> 7
+  // +[[!![]]+[+[]]]-[!![]+!![]+!![]] --> NaN
+  // Can only remove if inside the bracket, it has another operator (+, -, *)
+
+  return tempExpression
+}
+
 module.exports = {
-  getExpression: getExpression
+  getExpression: getExpression,
+  getOptimizedExpression
 }
