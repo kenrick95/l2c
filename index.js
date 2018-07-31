@@ -73,12 +73,23 @@ function getGroupedDigitExpression(number, groupSize, skip = 0) {
 
   let resultDigits = groupedDigits
     .map(digit => {
-      return '[' + mappings.get(digit) + ']'
+      const digitExpression = mappings.get(digit)
+      return `[${digitExpression}]`
+      // TODO: This is still buggy
+      // if (
+      //   digitExpression.startsWith('+') &&
+      //   eval(`+[${digitExpression.slice(1)}]`) === eval(`+[${digitExpression}]`)
+      // ) {
+      //   return `[${digitExpression.slice(1)}]`
+      // } else {
+      //   return `[${digitExpression}]`
+      // }
     })
     .join('+')
   if (typeof eval(resultDigits) !== 'number') {
-    resultDigits = '+[' + resultDigits + ']'
+    resultDigits = `+[${resultDigits}]`
   }
+
   return resultDigits
 }
 
