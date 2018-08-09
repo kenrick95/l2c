@@ -101,12 +101,13 @@ function runPass(count) {
   tryGroupedDigitizing(0)
   tryGroupedDigitizing(1)
   tryEverythingElse()
+  tryOptimizer()
 }
 runPass(1) // 141 tc failed
 runPass(2) // 56 tc failed
-runPass(3) // 55 tc failed
+runPass(3) // 55 tc failed; with optimizier: 30 fc failed
 
-// TODO: Worst length is now 85, output need to be optimized (e.g. stripping '+', etc)
+// TODO: with a subtraction substitution optimizer, worst length is now 80
 
 function tryEverythingElse() {
   vis.clear()
@@ -178,6 +179,19 @@ function getExpression(number) {
   }
 }
 
+function tryOptimizer() {
+  for (let i = 0; i < MAX_NUMBER; i++) {
+    const expression = getExpression(i)
+    const optimizedExpression = getOptimizedExpression(expression)
+    if (
+      optimizedExpression.length < expression.length &&
+      eval(optimizedExpression) === eval(expression)
+    ) {
+      mappings.set(i, optimizedExpression)
+    }
+  }
+}
+
 /**
  * Get a more optimized version of a expression
  * @param {string} expression
@@ -193,6 +207,44 @@ function getOptimizedExpression(expression) {
   // +[[+!![]]+[+[]]]-[+!![]+!![]+!![]] --> 7
   // +[[!![]]+[+[]]]-[!![]+!![]+!![]] --> NaN
   // Can only remove if inside the bracket, it has another operator (+, -, *)
+
+  /**
+   * Subtitute subtraction into expression
+   * idea is instead of writing "-[+!![]+!![]]", we write "-!![]-!![]"
+   */
+  {
+    let newExpression = []
+    let onDepth = []
+    let currentDepth = 0
+    for (let i = 0; i < tempExpression.length; i++) {
+      const currentCharacter = tempExpression[i]
+      const nextCharacter = tempExpression[i + 1]
+      if (currentCharacter === '[') {
+        currentDepth++
+      } else if (currentCharacter === ']') {
+        currentDepth--
+      }
+
+      if (currentCharacter === '-' && nextCharacter === '[') {
+        onDepth.push(currentDepth + 1)
+      } else if (
+        onDepth[onDepth.length - 1] === currentDepth &&
+        currentCharacter === '+'
+      ) {
+        newExpression.push('-')
+      } else if (
+        onDepth[onDepth.length - 1] === currentDepth &&
+        currentCharacter === '['
+      ) {
+        // no-op
+      } else if (currentDepth < onDepth[onDepth.length - 1]) {
+        onDepth.pop()
+      } else {
+        newExpression.push(currentCharacter)
+      }
+    }
+    tempExpression = newExpression.join('')
+  }
 
   return tempExpression
 }
