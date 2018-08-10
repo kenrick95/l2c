@@ -34,6 +34,9 @@ function getSingleDigitExpression(number) {
     .map(x => parseInt(x, 10))
   let resultDigits = digits
     .map(digit => {
+      // if (index === 0) {
+      //   return mappings.get(digit)
+      // }
       return '[' + mappings.get(digit) + ']'
     })
     .join('+')
@@ -74,16 +77,10 @@ function getGroupedDigitExpression(number, groupSize, skip = 0) {
   let resultDigits = groupedDigits
     .map(digit => {
       const digitExpression = mappings.get(digit)
-      return `[${digitExpression}]`
-      // TODO: This is still buggy
-      // if (
-      //   digitExpression.startsWith('+') &&
-      //   eval(`+[${digitExpression.slice(1)}]`) === eval(`+[${digitExpression}]`)
-      // ) {
-      //   return `[${digitExpression.slice(1)}]`
-      // } else {
-      //   return `[${digitExpression}]`
+      // if (index === 0) {
+      //   return digitExpression
       // }
+      return `[${digitExpression}]`
     })
     .join('+')
   if (typeof eval(resultDigits) !== 'number') {
@@ -105,9 +102,9 @@ function runPass(count) {
 }
 runPass(1) // 141 tc failed
 runPass(2) // 56 tc failed
-runPass(3) // 55 tc failed; with optimizier: 30 fc failed
+runPass(3) // 55 tc failed; with optimizier: 30 fc failed; with 2 optimizers: 7 tc failed
 
-// TODO: with a subtraction substitution optimizer, worst length is now 80
+// TODO: with a subtraction substitution optimizer and plus sign remover optimizer, worst length is now 79
 
 function tryEverythingElse() {
   vis.clear()
@@ -183,13 +180,130 @@ function tryOptimizer() {
   for (let i = 0; i < MAX_NUMBER; i++) {
     const expression = getExpression(i)
     const optimizedExpression = getOptimizedExpression(expression)
-    if (
-      optimizedExpression.length < expression.length &&
-      eval(optimizedExpression) === eval(expression)
-    ) {
-      mappings.set(i, optimizedExpression)
+    try {
+      if (
+        optimizedExpression.length < expression.length &&
+        eval(optimizedExpression) === eval(expression)
+      ) {
+        mappings.set(i, optimizedExpression)
+      }
+    } catch (e) {
+      console.error('e', i, expression, optimizedExpression)
     }
   }
+}
+
+/**
+ * Subtitute subtraction into expression
+ * idea is instead of writing "-[+!![]+!![]]", we write "-!![]-!![]"
+ */
+function subtractionOptimizer(expression) {
+  let tempExpression = expression.slice()
+  let newExpression = []
+  let onDepth = []
+  let currentDepth = 0
+  for (let i = 0; i < tempExpression.length; i++) {
+    const currentCharacter = tempExpression[i]
+    const nextCharacter = tempExpression[i + 1]
+    if (currentCharacter === '[') {
+      currentDepth++
+    } else if (currentCharacter === ']') {
+      currentDepth--
+    }
+
+    if (currentCharacter === '-' && nextCharacter === '[') {
+      onDepth.push(currentDepth + 1)
+    } else if (
+      onDepth[onDepth.length - 1] === currentDepth &&
+      currentCharacter === '+'
+    ) {
+      newExpression.push('-')
+    } else if (
+      onDepth[onDepth.length - 1] === currentDepth &&
+      currentCharacter === '['
+    ) {
+      // no-op
+      if (nextCharacter === '+') {
+        // no-op
+      } else {
+        newExpression.push('-')
+      }
+    } else if (currentDepth < onDepth[onDepth.length - 1]) {
+      onDepth.pop()
+    } else {
+      newExpression.push(currentCharacter)
+    }
+  }
+  return newExpression.join('')
+}
+
+/**
+ * Idea: Remove '+' after a start of bracket
+ * @param {string} expression
+ */
+function plusSignOptimizer(expression) {
+  let tempExpression = expression.slice()
+  let newExpression = tempExpression.split('')
+  let plusCounts = []
+  let firstPlusSignIndices = []
+  let currentDepth = 0
+  let collectedFirstPlusSignIndices = []
+
+  // Find [+{...}+{...}] and replace it as [{...}+{...}]
+
+  for (let i = 0; i < tempExpression.length; i++) {
+    const previousCharacter = i >= 1 ? tempExpression[i - 1] : null
+    const currentCharacter = tempExpression[i]
+    if (currentCharacter === '[') {
+      currentDepth++
+      plusCounts.push(0)
+      firstPlusSignIndices.push(null)
+    } else if (currentCharacter === ']') {
+      currentDepth--
+
+      const depthPlusCount = plusCounts.pop()
+      const firstPlusSignIndex = firstPlusSignIndices.pop()
+      if (depthPlusCount >= 2 && firstPlusSignIndex !== null) {
+        // Remove the first '+' sign!
+        collectedFirstPlusSignIndices.push(firstPlusSignIndex)
+      }
+    }
+
+    if (
+      currentDepth > 0 &&
+      (currentCharacter === '+' ||
+        currentCharacter === '-' ||
+        currentCharacter === '*')
+    ) {
+      if (
+        previousCharacter === '[' &&
+        currentCharacter === '+' &&
+        plusCounts[plusCounts.length - 1] === 0
+      ) {
+        firstPlusSignIndices[firstPlusSignIndices.length - 1] = i
+      }
+      plusCounts[plusCounts.length - 1]++
+    }
+  }
+
+  newExpression = newExpression
+    .map((char, i) => {
+      if (collectedFirstPlusSignIndices.indexOf(i) > -1) {
+        return null
+      }
+      return char
+    })
+    .filter(Boolean)
+
+  return newExpression.join('')
+}
+
+/**
+ * Remove digitizing first bracket
+ * Idea: "2" + "1" is "+[[!![]+!![]]+[+!![]]]" but can also be written as "+[!![]+!![]+[+!![]]]"
+ */
+function removeDoubleBracketsOptimizer(expression) {
+  return expression
 }
 
 /**
@@ -198,53 +312,9 @@ function tryOptimizer() {
  */
 function getOptimizedExpression(expression) {
   let tempExpression = expression
-  // Remove '+' after a start of bracket
-  // const removePlusAfterArray = /\[\+!!/g
-  // while (removePlusAfterArray.test(tempExpression)) {
-  //   tempExpression = tempExpression.replace(removePlusAfterArray, '[!!')
-  // }
-  // NOTE: Need to "parse" instead of just regexing, because
-  // +[[+!![]]+[+[]]]-[+!![]+!![]+!![]] --> 7
-  // +[[!![]]+[+[]]]-[!![]+!![]+!![]] --> NaN
-  // Can only remove if inside the bracket, it has another operator (+, -, *)
-
-  /**
-   * Subtitute subtraction into expression
-   * idea is instead of writing "-[+!![]+!![]]", we write "-!![]-!![]"
-   */
-  {
-    let newExpression = []
-    let onDepth = []
-    let currentDepth = 0
-    for (let i = 0; i < tempExpression.length; i++) {
-      const currentCharacter = tempExpression[i]
-      const nextCharacter = tempExpression[i + 1]
-      if (currentCharacter === '[') {
-        currentDepth++
-      } else if (currentCharacter === ']') {
-        currentDepth--
-      }
-
-      if (currentCharacter === '-' && nextCharacter === '[') {
-        onDepth.push(currentDepth + 1)
-      } else if (
-        onDepth[onDepth.length - 1] === currentDepth &&
-        currentCharacter === '+'
-      ) {
-        newExpression.push('-')
-      } else if (
-        onDepth[onDepth.length - 1] === currentDepth &&
-        currentCharacter === '['
-      ) {
-        // no-op
-      } else if (currentDepth < onDepth[onDepth.length - 1]) {
-        onDepth.pop()
-      } else {
-        newExpression.push(currentCharacter)
-      }
-    }
-    tempExpression = newExpression.join('')
-  }
+  tempExpression = subtractionOptimizer(tempExpression)
+  tempExpression = plusSignOptimizer(tempExpression)
+  tempExpression = removeDoubleBracketsOptimizer(tempExpression)
 
   return tempExpression
 }
