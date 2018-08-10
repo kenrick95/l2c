@@ -98,7 +98,9 @@ function runPass(count) {
   tryGroupedDigitizing(0)
   tryGroupedDigitizing(1)
   tryEverythingElse()
-  tryOptimizer()
+  tryOptimizer(subtractionOptimizer)
+  tryOptimizer(plusSignOptimizer)
+  tryOptimizer(removeDoubleBracketsOptimizer)
 }
 runPass(1) // 141 tc failed
 runPass(2) // 56 tc failed
@@ -175,11 +177,13 @@ function getExpression(number) {
     return finalCandidate
   }
 }
-
-function tryOptimizer() {
+function tryOptimizer(optimizerFunction) {
   for (let i = 0; i < MAX_NUMBER; i++) {
     const expression = getExpression(i)
-    const optimizedExpression = getOptimizedExpression(expression)
+    const optimizedExpression = getOptimizedExpression(
+      optimizerFunction,
+      expression
+    )
     try {
       if (
         optimizedExpression.length < expression.length &&
@@ -303,23 +307,51 @@ function plusSignOptimizer(expression) {
  * Idea: "2" + "1" is "+[[!![]+!![]]+[+!![]]]" but can also be written as "+[!![]+!![]+[+!![]]]"
  */
 function removeDoubleBracketsOptimizer(expression) {
-  return expression
+  let tempExpression = expression.slice()
+  let newExpression = []
+  let currentDepth = 0
+  const onDepth = []
+
+  for (let i = 0; i < tempExpression.length; i++) {
+    const currentCharacter = tempExpression[i]
+    const nextCharacter = tempExpression[i + 1]
+    if (currentCharacter === '[') {
+      currentDepth++
+    } else if (currentCharacter === ']') {
+      currentDepth--
+    }
+
+    if (currentCharacter === '[' && nextCharacter === '[') {
+      onDepth.push(currentDepth + 1)
+    } else if (
+      currentCharacter === ']' &&
+      onDepth[onDepth.length - 1] === currentDepth
+    ) {
+      // no-op
+      onDepth.pop()
+    } else {
+      newExpression.push(currentCharacter)
+    }
+
+    // console.log('loop', i, currentCharacter, nextCharacter, currentDepth, onDepth);
+  }
+
+  newExpression = newExpression.filter(Boolean)
+
+  return newExpression.join('')
 }
 
 /**
  * Get a more optimized version of a expression
  * @param {string} expression
  */
-function getOptimizedExpression(expression) {
-  let tempExpression = expression
-  tempExpression = subtractionOptimizer(tempExpression)
-  tempExpression = plusSignOptimizer(tempExpression)
-  tempExpression = removeDoubleBracketsOptimizer(tempExpression)
-
-  return tempExpression
+function getOptimizedExpression(optimizerFunction, expression) {
+  return optimizerFunction(expression)
 }
 
 module.exports = {
   getExpression: getExpression,
-  getOptimizedExpression
+  getOptimizedExpression: getOptimizedExpression.bind(this, expression => {
+    return plusSignOptimizer(subtractionOptimizer(expression))
+  })
 }
