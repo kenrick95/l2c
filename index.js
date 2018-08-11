@@ -101,6 +101,8 @@ function runPass(count) {
   tryOptimizer(subtractionOptimizer)
   tryOptimizer(plusSignOptimizer)
   tryOptimizer(removeDoubleBracketsOptimizer)
+  tryOptimizer(plusSignOptimizer)
+  tryOptimizer(removeDoubleBracketsOptimizer)
 }
 runPass(1) // 141 tc failed
 runPass(2) // 56 tc failed
@@ -255,6 +257,16 @@ function plusSignOptimizer(expression) {
 
   // Find [+{...}+{...}] and replace it as [{...}+{...}]
 
+  // TODO: +[+!![] + [!![]+!![]]] is 12, but +[!![] + [!![]+!![]]] is NaN
+  // Seems like need to put exception here when the first encounter is "+!![]"
+  // Hmm, seems a bit buggy on this exception case;
+  // This is okay
+  // [!![]+!![]]
+  // >> Array [ 2 ]
+  // This is not okay
+  // [!![] + [!![]+!![]]]
+  // >> Array [ "true2" ]
+
   for (let i = 0; i < tempExpression.length; i++) {
     const previousCharacter = i >= 1 ? tempExpression[i - 1] : null
     const currentCharacter = tempExpression[i]
@@ -269,7 +281,15 @@ function plusSignOptimizer(expression) {
       const firstPlusSignIndex = firstPlusSignIndices.pop()
       if (depthPlusCount >= 2 && firstPlusSignIndex !== null) {
         // Remove the first '+' sign!
-        collectedFirstPlusSignIndices.push(firstPlusSignIndex)
+        // if '[+!' is encountered, only remove if there depthPlusCount > 3!
+        const nextCharacter = tempExpression[firstPlusSignIndex + 1]
+        if (nextCharacter === '!') {
+          if (depthPlusCount >= 3) {
+            collectedFirstPlusSignIndices.push(firstPlusSignIndex)
+          }
+        } else {
+          collectedFirstPlusSignIndices.push(firstPlusSignIndex)
+        }
       }
     }
 
@@ -322,7 +342,7 @@ function removeDoubleBracketsOptimizer(expression) {
     }
 
     if (currentCharacter === '[' && nextCharacter === '[') {
-      onDepth.push(currentDepth + 1)
+      onDepth.push(currentDepth)
     } else if (
       currentCharacter === ']' &&
       onDepth[onDepth.length - 1] === currentDepth
@@ -332,8 +352,6 @@ function removeDoubleBracketsOptimizer(expression) {
     } else {
       newExpression.push(currentCharacter)
     }
-
-    // console.log('loop', i, currentCharacter, nextCharacter, currentDepth, onDepth);
   }
 
   newExpression = newExpression.filter(Boolean)
@@ -352,6 +370,8 @@ function getOptimizedExpression(optimizerFunction, expression) {
 module.exports = {
   getExpression: getExpression,
   getOptimizedExpression: getOptimizedExpression.bind(this, expression => {
-    return plusSignOptimizer(subtractionOptimizer(expression))
+    return removeDoubleBracketsOptimizer(
+      plusSignOptimizer(subtractionOptimizer(expression))
+    )
   })
 }
