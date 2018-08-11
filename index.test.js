@@ -1,4 +1,4 @@
-const { getExpression, getOptimizedExpression } = require('./index')
+const { getExpression, getOptimizedExpression, MAX_NUMBER } = require('./index')
 
 const testCases = [
   {
@@ -19,38 +19,8 @@ const testCases = [
   },
   {
     input: '[+!![]+!![]]*[+[[+!![]+!![]+!![]]+[+[]]]-[+!![]+!![]]]', // 56 = 2 * ("30" - 2)
-    output: '[!![]+!![]]*[!![+!![]+!![]+[+[]]]-!![]-!![]]'
-  },
-  // {
-  //   input: '+[[+!![]]+[+[]]+[+[]]+[+[]]]-[[+!![]+!![]+!![]]*[+[+!![]+[+!![]]+[+[]]]-!![]]]' // 673
-  // },
-  // {
-  //   input: '[+!![]+!![]]*[[!![]+!![]+!![]]*[+[+!![]+[+!![]]+[!![]+!![]+!![]]]]-[+!![]+!![]]]' // 674
-  // },
-  // {
-  //   input: '[+!![]+!![]]*[[!![]+!![]+!![]]*[+[+!![]+[+!![]]+[!![]+!![]+!![]]]]-[+!![]+!![]]]' // 674
-  // },
-  // {
-  //   input: '[+!![]+!![]]*[[!![]+!![]+!![]]*[+[+!![]+[+!![]]+[!![]+!![]+!![]]]]-[+!![]+!![]]]' // 674
-  // },
-  // {
-  //   input: '[+!![]+!![]+!![]+!![]+!![]]*[+[+!![]+[!![]+!![]+!![]+!![]+!![]]+[+[]]]-!![]]' // 745
-  // },
-  {
-    input:
-      '[+[+!![]+[!![]+!![]+!![]+!![]+!![]]]]*[+[[!![]+!![]+!![]+!![]+!![]]+[+!![]]]]', // 765
-    output:
-      '[+!![]+[!![]+!![]+!![]+!![]+!![]]]*[!![]+!![]+!![]+!![]+!![]+[+!![]]]'
-  },
-  {
-    input:
-      '[+[+!![]+[!![]+!![]+!![]+!![]+!![]]]]*[+[[!![]+!![]+!![]+!![]+!![]]+[+!![]]]]',
-    output:
-      '[+[+!![]+[!![]+!![]+!![]+!![]+!![]]]]*[+[!![]+!![]+!![]+!![]+!![]+[+!![]]]]'
+    output: '[!![]+!![]]*[!![]+!![]+!![]+[+[]]-!![]-!![]]'
   }
-  // {
-  //   input: '+[[+[+!![]+[+[]]]-!![]]+[+[]]+[+!![]]]-[[!![]+!![]+!![]]*[+[+!![]+[!![]+!![]]]]]' // 865
-  // }
 ]
 
 describe('Optimizer', function() {
@@ -59,7 +29,6 @@ describe('Optimizer', function() {
     test(
       'Result of optimizing ' + testCase.input + ' well-optimized',
       function() {
-        console.log('input', testCase.input, ' output', result)
         expect(result).toBe(testCase.output)
       }
     )
@@ -67,22 +36,22 @@ describe('Optimizer', function() {
 })
 
 describe('All number validation', function() {
-  for (let i = 0; i <= 1000; i++) {
+  for (let i = 0; i <= MAX_NUMBER; i++) {
     const result = getExpression(i)
     test(
       'result of ' +
         i +
         ' should produce less than or equal length than expected output ',
       function() {
-        if (result.length > 75)
-          console.log(
-            'input',
-            i,
-            ' output',
-            result,
-            result.length,
-            result.length <= 75 ? 'ok' : 'nope'
-          )
+        // if (result.length > 75)
+        //   console.log(
+        //     'input',
+        //     i,
+        //     ' output',
+        //     result,
+        //     result.length,
+        //     result.length <= 75 ? 'ok' : 'nope'
+        //   )
         expect(result.length).toBeLessThanOrEqual(75)
       }
     )
