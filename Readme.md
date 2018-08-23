@@ -2,38 +2,16 @@
 
 [![pipeline status](https://gitlab.com/kenrick95/l2c/badges/master/pipeline.svg)](https://gitlab.com/kenrick95/l2c/commits/master)
 
-## Make*me-an+[integer!]
-https://ipsc.ksp.sk/2015/real/problems/m.html
+[Blog post](https://blog.kenrick95.org/2018/08/learn-to-count-in-js/)
 
+## Problem
+
+> Make*me-an+[integer!]
+> -- https://ipsc.ksp.sk/2015/real/problems/m.html
+>
 > For each i between 0 and 1000, line i + 1 of your output should contain a valid JavaScript expression consisting only of the characters ![]+-* that evaluates to a number (i.e., typeof(result) == "number") with value i.
-
 > Additionally, your expressions must be short enough. For the easy subproblem M1, each JavaScript expression should be no longer than 200 characters. For the hard subproblem M2, no expression should exceed 75 characters.
 
-## Idea
-
-```
-- 0 --> +[]
-- 1 --> +!![]
-- 2 --> +!![]+!![]
-- 3 --> +!![]+!![]+!![]
-- 4 --> +!![]+!![]+!![]+!![]
-- 5 --> +!![]+!![]+!![]+!![]+!![]
-- 6 --> [!![]+!![]+!![]]*[!![]+!![]], 2 * 3
-        +!![]+!![]+!![]+!![]+!![]+!![], counting
-- 7 --> [!![]+!![]]*[!![]+!![]]*[!![]+!![]]-!![], 8 - 1
-        +!![]+!![]+!![]+!![]+!![]+!![]+!![], counting
-        +[[+!+[]]+[+[]]]-!![]-!![]-!![], 10 - 1 - 1 - 1
-- 8 --> [!![]+!![]]*[!![]+!![]]*[!![]+!![]], 2 * 2 * 2
-        +!![]+!![]+!![]+!![]+!![]+!![]+!![]+!![], counting
-        +[[+!+[]]+[+[]]]-!![]-!![], 10 - 1 - 1
-- 9 --> +[[+!+[]]+[+[]]]-!![], 10 - 1
-- 10 --> +[[+!+[]]+[+[]]], "1" + "0"
-- 100 --> +[[+!+[]]+[+[]]+[+[]]], "1" + "0" + "0"
-- 900 --> [[+!+[]]+[+[]]+[+[]]+[+[]]]-[[+!+[]]+[+[]]+[+[]]], 1000 - 100
-- 990 --> [[+!+[]]+[+[]]+[+[]]+[+[]]]-[[+!+[]]+[+[]]], 1000 - 10
-- 999 --> [[+!+[]]+[+[]]+[+[]]+[+[]]]-!![], 1000 - 1
-- 1000 --> +[[+!+[]]+[+[]]+[+[]]+[+[]]], "1" + "0" + "0" + "0"
-```
 
 ## Solution description
 
